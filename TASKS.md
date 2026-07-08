@@ -20,4 +20,4 @@
 ## Phase 3
 
 - [ ] VSS-aligned signal emission for vehicle-manifest runs (Kuksa client feature flag)
-- [ ] ARM64 (Jetson) release artifacts
+- [ ] ARM64 release artifacts (Jetson; Snapdragon vSoC / Graviton)
