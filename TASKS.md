@@ -20,4 +20,7 @@
 ## Phase 3
 
 - [ ] VSS-aligned signal emission for vehicle-manifest runs (Kuksa client feature flag)
+- [ ] `vxplant`: plant-model agent for actuator/sensor closed loops — subscribes to actuator
+      commands (CAN/VSS), integrates a first-order response model, publishes sensor feedback;
+      driven by the manifest `actuators:` block (FMI/FMU import is phase 4)
 - [ ] ARM64 release artifacts (Jetson; Snapdragon vSoC / Graviton)
