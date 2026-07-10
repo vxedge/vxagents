@@ -1,0 +1,18 @@
+[package]
+name = "vxtraffic"
+description = "vxedge synthetic traffic generator: paced UDP load per manifest traffic_profiles"
+version.workspace = true
+publish.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+vxagent-common = { workspace = true }
+tokio = { workspace = true }
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
