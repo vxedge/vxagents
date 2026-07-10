@@ -2,11 +2,15 @@
 
 ## Phase 1 (critical path: exp-001 needs probes + generator)
 
-- [ ] Workspace scaffold + CI; shared `vxagent-common` crate (metrics, config, logging)
-- [ ] `vxprobe`: UDP round-trip probe with kernel timestamps; p50/p95/p99 latency + jitter +
-      loss computed client-side; Prometheus exporter
-- [ ] `vxtraffic`: synthetic generator honoring `traffic_profiles` (pps, bandwidth_mbps,
-      payload_bytes); rate accuracy test
+- [x] Workspace scaffold + CI (build/test/clippy/fmt + cargo-deny, Dependabot); shared
+      `vxagent-common` crate (packet codec, Prometheus text rendering, /metrics exporter)
+- [x] `vxprobe`: UDP round-trip probe; p50/p95/p99 + jitter (stddev) + timeout-based loss via
+      hdrhistogram; live Prometheus exporter; JSON summary; loopback e2e test in CI
+      *(v1 uses userspace monotonic timestamps — see kernel-timestamp follow-up below)*
+- [x] `vxtraffic`: paced generator honoring `traffic_profiles` (pps or bandwidth-derived);
+      verified 49.99/50 mbit accuracy; unconnected send_to (connected UDP halves rate on
+      ICMP unreachable — found in smoke test)
+- [ ] Kernel timestamps (SO_TIMESTAMPING) in vxprobe; document delta vs userspace clocks
 - [ ] `vxpcap`: interface capture with duration bound, writes to results dir
 - [ ] Footprint budget doc + measurement (CPU%, RSS at target probe rates)
 - [ ] Static musl builds for injection into minimal guests (Zephyr/FreeRTOS hosts excluded —
