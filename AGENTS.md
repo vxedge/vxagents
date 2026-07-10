@@ -21,3 +21,9 @@ jitter, packet loss per slice).
 - Report timestamps monotonic + wall-clock; document clock-sync assumptions (single host:
   shared clock; multi-host: PTP/chrony noted in results metadata).
 - Rust only (§15); binaries must build for x86-64 and ARM64 (phase-4 Jetson).
+
+## Project skills
+
+AI/contributor skills in `.claude/skills/`: **rust-patterns** (house Rust rules, per the
+Microsoft Rust Patterns book) and **testbed-quality** (the OEM-adoption bar). Apply both to
+every change.
