@@ -6,10 +6,14 @@ All notable changes to this repo are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+
+- Open-source release preparation: `LICENSE` (Apache-2.0), `NOTICE`, rewritten `README.md`. Crate `license` metadata is now `Apache-2.0` (was `MIT OR Apache-2.0`).
+
 ## [0.1.0] - 2026-07-13
 
 **Phase-1 gate passed**: H1, H3, and H4 all have reproducible numbers (`vxperiments`).
-Repos stay private for now — see `docs/STATUS.md` for the public-visibility punch list.
+Repositories were still private at this release.
 
 ### Added
 - `vxagent-common`: shared probe-packet encoding, minimal Prometheus text rendering, and a
