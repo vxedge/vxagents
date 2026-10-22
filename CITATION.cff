@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software or its results, please cite it as below."
+title: "vxagents: measurement agents for an all-software SDV testbed"
+type: software
+authors:
+  - family-names: "Djaafri"
+    given-names: "Fouzi"
+    affiliation: "Independent Researcher"
+repository-code: "https://github.com/vxedge/vxagents"
+url: "https://vxedge.dev"
+version: "0.1.0"
+date-released: "2026-07-13"
+license: Apache-2.0
+keywords:
+  - sdv
+  - software-defined-vehicle
+  - network-slicing
+  - 5g
+  - reproducible-research
+  - probes
+  - traffic-generation
+abstract: >-
+  vxagents provides the latency probe, traffic generator and Prometheus exporters used by vxedge experiments. They are built not to perturb what they measure.
