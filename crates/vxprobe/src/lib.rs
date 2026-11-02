@@ -158,6 +158,14 @@ impl ProbeState {
     }
 }
 
+fn is_transient(e: &std::io::Error) -> bool {
+    use std::io::ErrorKind::{ConnectionRefused, HostUnreachable, NetworkUnreachable};
+    matches!(
+        e.kind(),
+        ConnectionRefused | HostUnreachable | NetworkUnreachable
+    )
+}
+
 /// Run a probe session against a reflector; returns the final summary.
 pub async fn run_sender(cfg: SendConfig, state: Arc<ProbeState>) -> std::io::Result<Summary> {
     let sock = Arc::new(UdpSocket::bind("0.0.0.0:0").await?);
@@ -169,8 +177,12 @@ pub async fn run_sender(cfg: SendConfig, state: Arc<ProbeState>) -> std::io::Res
     let receiver = tokio::spawn(async move {
         let mut buf = vec![0u8; 65536];
         loop {
-            let Ok(n) = recv_sock.recv(&mut buf).await else {
-                return;
+            let n = match recv_sock.recv(&mut buf).await {
+                Ok(n) => n,
+                // A connected socket reports the ICMP answer to one probe here. That probe is
+                // lost, which the reaper counts, and the next one can still get through.
+                Err(e) if is_transient(&e) => continue,
+                Err(_) => return,
             };
             let now = Instant::now();
             if let Some(seq) = packet::decode(&buf[..n])
