@@ -6,6 +6,10 @@ All notable changes to this repo are documented here. Format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- `vxprobe send` stopped counting echoes after the first refused or unreachable probe, so a reflector that started late read as total loss. It now loses that probe and keeps measuring.
+
 ### Security
 
 - Lockfile update `tokio` 1.53.1 -> 1.54.1, which fixes RUSTSEC-2026-0386 (unsound `AsyncFd` constructors). This repo does not call `AsyncFd` directly.
