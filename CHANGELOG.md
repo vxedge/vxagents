@@ -6,6 +6,10 @@ All notable changes to this repo are documented here. Format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The toolchain moves from Rust 1.96.1 to 1.99.1 (`rust-toolchain.toml`, `rust-version` 1.99). Build, test, clippy `-D warnings`, fmt and `cargo deny` pass unchanged; no source changes were needed.
+
 ### Fixed
 
 - `vxprobe send` stopped counting echoes after the first refused or unreachable probe, so a reflector that started late read as total loss. It now loses that probe and keeps measuring.
