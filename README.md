@@ -31,13 +31,13 @@ cargo test --workspace            # includes a loopback end-to-end probe test
 
 vxprobe produces every latency, jitter and loss number in
 [`docs/RESULTS.md`](https://github.com/vxedge/docs/blob/main/RESULTS.md) (p50/p95/p99 per
-slice, 1000 pps × 60 s per point). Timestamps are userspace-monotonic today; the move to
-SO_TIMESTAMPING is tracked in [`TASKS.md`](TASKS.md).
+slice, 1000 pps × 60 s per point). Probes use userspace monotonic clocks; kernel timestamps
+(SO_TIMESTAMPING) are not supported today.
 
 ## Links
 
 - Site: <https://vxedge.dev>
 - Architecture: [`docs/ARCHITECTURE.md`](https://github.com/vxedge/docs/blob/main/ARCHITECTURE.md)
-- Results: [`docs/RESULTS.md`](https://github.com/vxedge/docs/blob/main/RESULTS.md) · Roadmap: [`docs/ROADMAP.md`](https://github.com/vxedge/docs/blob/main/ROADMAP.md)
+- Results: [`docs/RESULTS.md`](https://github.com/vxedge/docs/blob/main/RESULTS.md)
 - Contributing: [CONTRIBUTING](https://github.com/vxedge/.github/blob/main/CONTRIBUTING.md) · Security: [SECURITY](https://github.com/vxedge/.github/blob/main/SECURITY.md)
 - License: Apache-2.0 ([`LICENSE`](LICENSE))

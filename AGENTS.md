@@ -4,12 +4,13 @@ Rust measurement agents deployed per experiment into zones, compute nodes, and t
 path. Master spec: `../docs/ARCHITECTURE.md` §11 (agents), §12 (metrics: p50/p95/p99 latency,
 jitter, packet loss per slice).
 
-## What lands here
+## What is here
 
-- Latency/jitter probe agents (timestamped UDP/TCP probes between zone↔compute pairs).
-- Traffic generator agent (backs `TrafficService` synthetic profiles: pps, bandwidth, payload).
-- PCAP capture control (per-interface, duration-bounded, per §6 `telemetry.pcap`).
-- Prometheus exporters for everything above.
+- `vxprobe`: timestamped UDP round-trip probes and a reflector (RTT percentiles, jitter,
+  loss), with a live Prometheus exporter.
+- `vxtraffic`: traffic generator backing `TrafficService` synthetic profiles (pps,
+  bandwidth, payload).
+- `vxagent-common`: shared packet codec, Prometheus text rendering and `/metrics` exporter.
 
 ## Rules
 
@@ -20,10 +21,15 @@ jitter, packet loss per slice).
   never long-running daemons outside an experiment.
 - Report timestamps monotonic + wall-clock; document clock-sync assumptions (single host:
   shared clock; multi-host: PTP/chrony noted in results metadata).
-- Rust only (§15); binaries must build for x86-64 and ARM64 (phase-4 Jetson).
+- Rust only (§15); binaries must build for x86-64 and ARM64.
 
 ## Project skills
 
 AI/contributor skills in `.claude/skills/`: **rust-patterns** (house Rust rules, per the
 Microsoft Rust Patterns book) and **testbed-quality** (the OEM-adoption bar). Apply both to
 every change.
+
+## Work tracking
+
+Work items are tracked on the maintainers' internal board; the public record of changes is
+`CHANGELOG.md`.

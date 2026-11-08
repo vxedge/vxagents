@@ -3,8 +3,8 @@
 //! jitter, and loss.
 //!
 //! Timestamping: monotonic userspace clock (`Instant`) around send/receive.
-//! Documented limitation: kernel timestamps (SO_TIMESTAMPING) are a recorded
-//! follow-up (TASKS.md) — userspace clocks add scheduler noise to the tails,
+//! Documented limitation: kernel timestamps (SO_TIMESTAMPING) are not
+//! supported. Userspace clocks add scheduler noise to the tails,
 //! which is acceptable for slice-vs-slice comparison but must be stated in
 //! results metadata.
 
