@@ -6,6 +6,15 @@ All notable changes to this repo are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-09
+
+`vxprobe` exports the round-trip distribution as a Prometheus histogram, so latency over time can be
+drawn from successive scrapes. `vxprobe send` also keeps counting after a refused or unreachable
+probe. Rust 1.99.1, and a `tokio` update for RUSTSEC-2026-0386.
+
+**Upgrading from 0.1.x.** Additive: every existing series, flag and the stdout summary are
+unchanged.
+
 ### Added
 
 - `vxprobe send --metrics` also exports the RTT distribution as a Prometheus histogram,
