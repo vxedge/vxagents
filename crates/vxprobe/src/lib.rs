@@ -60,6 +60,32 @@ pub struct RttSummary {
     pub max: f64,
 }
 
+/// Upper bounds of the RTT distribution's buckets, in seconds, as Prometheus `le` labels: 1, 2
+/// and 5 per decade from 10 µs to 10 s. The counts are cumulative from the start of the run, so
+/// the difference between two scrapes is the distribution of the RTTs in between: latency over
+/// time, at the scrape interval, with nothing lost between scrapes.
+pub const RTT_BUCKETS: [(&str, u64); 19] = [
+    ("0.00001", 10_000),
+    ("0.00002", 20_000),
+    ("0.00005", 50_000),
+    ("0.0001", 100_000),
+    ("0.0002", 200_000),
+    ("0.0005", 500_000),
+    ("0.001", 1_000_000),
+    ("0.002", 2_000_000),
+    ("0.005", 5_000_000),
+    ("0.01", 10_000_000),
+    ("0.02", 20_000_000),
+    ("0.05", 50_000_000),
+    ("0.1", 100_000_000),
+    ("0.2", 200_000_000),
+    ("0.5", 500_000_000),
+    ("1", 1_000_000_000),
+    ("2", 2_000_000_000),
+    ("5", 5_000_000_000),
+    ("10", 10_000_000_000),
+];
+
 /// Shared live state, rendered by the Prometheus exporter during a run.
 /// std::sync mutexes on purpose: critical sections are tiny and lock-free
 /// counters carry the hot-path totals.
@@ -69,6 +95,9 @@ pub struct ProbeState {
     lost: AtomicU64,
     // RTTs recorded in nanoseconds, 3 significant figures, up to 60 s.
     histogram: Mutex<Histogram<u64>>,
+    /// RTTs per bucket of [`RTT_BUCKETS`], not cumulative; the last slot is above the top bound.
+    buckets: [AtomicU64; RTT_BUCKETS.len() + 1],
+    rtt_sum_ns: AtomicU64,
     pending: Mutex<HashMap<u64, Instant>>,
 }
 
@@ -82,12 +111,26 @@ impl ProbeState {
             histogram: Mutex::new(
                 Histogram::new_with_bounds(1, 60_000_000_000, 3).expect("valid histogram bounds"),
             ),
+            buckets: std::array::from_fn(|_| AtomicU64::new(0)),
+            rtt_sum_ns: AtomicU64::new(0),
             pending: Mutex::new(HashMap::new()),
         })
     }
 
     fn lock_histogram(&self) -> std::sync::MutexGuard<'_, Histogram<u64>> {
         self.histogram.lock().expect("histogram lock poisoned")
+    }
+
+    /// Record one round trip in the summary histogram and the exported distribution.
+    pub fn record_rtt(&self, rtt_ns: u64) {
+        let rtt_ns = rtt_ns.max(1);
+        self.lock_histogram().record(rtt_ns).ok();
+        let slot = RTT_BUCKETS
+            .iter()
+            .position(|(_, le)| rtt_ns <= *le)
+            .unwrap_or(RTT_BUCKETS.len());
+        self.buckets[slot].fetch_add(1, Ordering::Relaxed);
+        self.rtt_sum_ns.fetch_add(rtt_ns, Ordering::Relaxed);
     }
 
     fn lock_pending(&self) -> std::sync::MutexGuard<'_, HashMap<u64, Instant>> {
@@ -128,6 +171,36 @@ impl ProbeState {
             prom::line(&mut out, "vxprobe_rtt_seconds_mean", &[], h.mean() / 1e9);
             prom::line(&mut out, "vxprobe_rtt_seconds_stddev", &[], h.stdev() / 1e9);
         }
+        drop(h);
+        let mut cumulative = 0u64;
+        for (i, (le, _)) in RTT_BUCKETS.iter().enumerate() {
+            cumulative += self.buckets[i].load(Ordering::Relaxed);
+            prom::line(
+                &mut out,
+                "vxprobe_rtt_distribution_seconds_bucket",
+                &[("le", le)],
+                cumulative as f64,
+            );
+        }
+        cumulative += self.buckets[RTT_BUCKETS.len()].load(Ordering::Relaxed);
+        prom::line(
+            &mut out,
+            "vxprobe_rtt_distribution_seconds_bucket",
+            &[("le", "+Inf")],
+            cumulative as f64,
+        );
+        prom::line(
+            &mut out,
+            "vxprobe_rtt_distribution_seconds_sum",
+            &[],
+            self.rtt_sum_ns.load(Ordering::Relaxed) as f64 / 1e9,
+        );
+        prom::line(
+            &mut out,
+            "vxprobe_rtt_distribution_seconds_count",
+            &[],
+            cumulative as f64,
+        );
         out
     }
 
@@ -189,7 +262,7 @@ pub async fn run_sender(cfg: SendConfig, state: Arc<ProbeState>) -> std::io::Res
                 && let Some(sent_at) = recv_state.lock_pending().remove(&seq)
             {
                 let rtt_ns = now.duration_since(sent_at).as_nanos() as u64;
-                recv_state.lock_histogram().record(rtt_ns.max(1)).ok();
+                recv_state.record_rtt(rtt_ns);
                 recv_state.received.fetch_add(1, Ordering::Relaxed);
             }
         }
@@ -242,4 +315,54 @@ pub async fn run_sender(cfg: SendConfig, state: Arc<ProbeState>) -> std::io::Res
     }
 
     Ok(state.summary())
+}
+
+#[cfg(test)]
+mod distribution_tests {
+    use super::*;
+
+    fn value(text: &str, series: &str) -> f64 {
+        text.lines()
+            .find_map(|l| l.strip_prefix(series)?.trim().parse().ok())
+            .unwrap_or_else(|| panic!("no `{series}` in\n{text}"))
+    }
+
+    /// Buckets are cumulative, `+Inf` and `_count` agree, and `_sum` is in seconds.
+    #[test]
+    fn round_trips_land_in_cumulative_buckets() {
+        let state = ProbeState::new();
+        for ns in [5_000, 15_000, 40_000, 3_000_000, 20_000_000_000] {
+            state.record_rtt(ns);
+        }
+        let text = state.render();
+        let bucket = |le: &str| {
+            value(
+                &text,
+                &format!("vxprobe_rtt_distribution_seconds_bucket{{le=\"{le}\"}}"),
+            )
+        };
+        assert_eq!(bucket("0.00001"), 1.0);
+        assert_eq!(bucket("0.00002"), 2.0);
+        assert_eq!(bucket("0.00005"), 3.0);
+        assert_eq!(bucket("0.005"), 4.0);
+        assert_eq!(bucket("10"), 4.0);
+        assert_eq!(bucket("+Inf"), 5.0);
+        assert_eq!(value(&text, "vxprobe_rtt_distribution_seconds_count"), 5.0);
+        let sum = value(&text, "vxprobe_rtt_distribution_seconds_sum");
+        assert!((sum - 20.00306).abs() < 1e-9, "{sum}");
+    }
+
+    /// Before any round trip, every bucket reads zero and the quantiles are left out.
+    #[test]
+    fn an_idle_probe_exports_empty_buckets() {
+        let text = ProbeState::new().render();
+        assert_eq!(
+            value(
+                &text,
+                "vxprobe_rtt_distribution_seconds_bucket{le=\"+Inf\"}"
+            ),
+            0.0
+        );
+        assert!(!text.contains("quantile"));
+    }
 }
