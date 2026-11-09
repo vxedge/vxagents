@@ -6,6 +6,15 @@ All notable changes to this repo are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+
+- `vxprobe send --metrics` also exports the RTT distribution as a Prometheus histogram,
+  `vxprobe_rtt_distribution_seconds_bucket` (`le` from 10 µs to 10 s, 1, 2 and 5 per decade, and
+  `+Inf`), `_sum` and `_count`. The counts are cumulative from the start of the run, so the
+  difference between two scrapes is the distribution of the round trips in between: latency over
+  time at the scrape interval, with nothing lost between scrapes. The existing series and the
+  stdout summary are unchanged.
+
 ### Changed
 
 - Lockfile update: the semver-compatible dependency updates `cargo update` offers (24 crates). No `Cargo.toml` change and no source change; build, test, clippy `-D warnings`, fmt and `cargo deny` pass.
