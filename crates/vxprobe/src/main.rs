@@ -10,10 +10,18 @@ use std::sync::Arc;
 use std::time::Duration;
 use vxprobe::{ProbeState, SendConfig, run_reflector, run_sender};
 
+/// `--version`: the version, then the build profile, which vxedged records with a run's results.
+/// `debug` is a build with debug assertions on.
+const VERSION: &str = if cfg!(debug_assertions) {
+    concat!(env!("CARGO_PKG_VERSION"), " (debug)")
+} else {
+    concat!(env!("CARGO_PKG_VERSION"), " (release)")
+};
+
 #[derive(Parser)]
 #[command(
     name = "vxprobe",
-    version,
+    version = VERSION,
     about = "vxedge latency probe (UDP round-trips)"
 )]
 struct Cli {

@@ -8,10 +8,18 @@ use std::net::SocketAddr;
 use std::time::Duration;
 use vxtraffic::{LoadConfig, pps_for_bandwidth, run_load_until};
 
+/// `--version`: the version, then the build profile, which vxedged records with a run's results.
+/// `debug` is a build with debug assertions on.
+const VERSION: &str = if cfg!(debug_assertions) {
+    concat!(env!("CARGO_PKG_VERSION"), " (debug)")
+} else {
+    concat!(env!("CARGO_PKG_VERSION"), " (release)")
+};
+
 #[derive(Parser)]
 #[command(
     name = "vxtraffic",
-    version,
+    version = VERSION,
     about = "vxedge synthetic UDP load generator"
 )]
 struct Cli {
