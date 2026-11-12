@@ -6,6 +6,11 @@ All notable changes to this repo are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-11-12
+
+`vxtraffic` records its achieved rate when a campaign stops it early. Additive: flags, series and
+the summary's fields are unchanged.
+
 ### Fixed
 
 - `vxtraffic` prints its stdout summary when stopped by SIGTERM or SIGINT, counting what it sent
