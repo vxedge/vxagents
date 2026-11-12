@@ -6,6 +6,11 @@ All notable changes to this repo are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-12
+
+`vxprobe` exports its slowest round trip, so a short measure window can be judged by it. Additive:
+every existing series, flag and the stdout summary are unchanged.
+
 ### Added
 
 - `vxprobe send --metrics` also exports `vxprobe_rtt_seconds_max`, the slowest round trip of the
