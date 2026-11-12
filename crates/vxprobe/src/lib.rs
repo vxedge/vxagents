@@ -168,6 +168,12 @@ impl ProbeState {
                     h.value_at_quantile(q) as f64 / 1e9,
                 );
             }
+            prom::line(
+                &mut out,
+                "vxprobe_rtt_seconds_max",
+                &[],
+                h.max() as f64 / 1e9,
+            );
             prom::line(&mut out, "vxprobe_rtt_seconds_mean", &[], h.mean() / 1e9);
             prom::line(&mut out, "vxprobe_rtt_seconds_stddev", &[], h.stdev() / 1e9);
         }

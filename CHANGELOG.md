@@ -6,6 +6,12 @@ All notable changes to this repo are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+
+- `vxprobe send --metrics` also exports `vxprobe_rtt_seconds_max`, the slowest round trip of the
+  run so far, as the stdout summary's `max` reports it. A short measure window can then be judged
+  by its slowest packet, which is what a cold start shows.
+
 ## [0.2.0] - 2026-11-09
 
 `vxprobe` exports the round-trip distribution as a Prometheus histogram, so latency over time can be
