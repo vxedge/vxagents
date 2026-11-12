@@ -48,6 +48,17 @@ async fn probe_measures_over_loopback() {
     let rendered = state.render();
     assert!(rendered.contains("vxprobe_sent_total 200"));
     assert!(rendered.contains("vxprobe_rtt_seconds{quantile=\"0.99\"}"));
+    // The slowest round trip so far, as the summary's `max` reports it.
+    let max = rendered
+        .lines()
+        .find_map(|l| l.strip_prefix("vxprobe_rtt_seconds_max "))
+        .and_then(|v| v.parse::<f64>().ok())
+        .expect("vxprobe_rtt_seconds_max is exported");
+    assert!(
+        (max * 1e6 - summary.rtt_us.max).abs() < 1.0,
+        "{max} s vs {} us",
+        summary.rtt_us.max
+    );
 }
 
 /// A probe sent before the reflector is up comes back as a refused port. That is one lost probe,
