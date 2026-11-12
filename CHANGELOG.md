@@ -6,6 +6,12 @@ All notable changes to this repo are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+
+- `--version` ends in the build profile, `(debug)` or `(release)`, as in
+  `vxprobe 0.2.2 (release)`. vxedged records it with a run's results (vxedge X9.14), since a debug
+  build changes what a probe measures. `debug` means a build with debug assertions on.
+
 ## [0.2.2] - 2026-11-12
 
 `vxtraffic` records its achieved rate when a campaign stops it early. Additive: flags, series and
