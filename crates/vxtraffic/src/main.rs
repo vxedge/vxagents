@@ -6,7 +6,7 @@
 use clap::Parser;
 use std::net::SocketAddr;
 use std::time::Duration;
-use vxtraffic::{LoadConfig, pps_for_bandwidth, run_load};
+use vxtraffic::{LoadConfig, pps_for_bandwidth, run_load_until};
 
 #[derive(Parser)]
 #[command(
@@ -44,12 +44,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         (None, Some(mbps)) => pps_for_bandwidth(mbps, cli.payload_bytes),
         (None, None) => return Err("pass --pps or --bandwidth-mbps".into()),
     };
-    let summary = run_load(LoadConfig {
-        target: cli.target,
-        pps,
-        payload_bytes: cli.payload_bytes,
-        duration: Duration::from_secs(cli.duration_s),
-    })
+    // A run stopped by SIGTERM or SIGINT still prints its summary: vxedged stops a profile's load
+    // with SIGTERM at cooldown, and the summary is the only record of the achieved rate.
+    let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
+    let stop = async move {
+        tokio::select! {
+            _ = term.recv() => {}
+            _ = tokio::signal::ctrl_c() => {}
+        }
+    };
+    let summary = run_load_until(
+        LoadConfig {
+            target: cli.target,
+            pps,
+            payload_bytes: cli.payload_bytes,
+            duration: Duration::from_secs(cli.duration_s),
+        },
+        stop,
+    )
     .await?;
     println!("{}", serde_json::to_string_pretty(&summary)?);
     Ok(())

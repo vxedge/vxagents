@@ -6,6 +6,13 @@ All notable changes to this repo are documented here. Format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- `vxtraffic` prints its stdout summary when stopped by SIGTERM or SIGINT, counting what it sent
+  until then, and exits 0. vxedged stops a profile's load with SIGTERM at cooldown, before the
+  load's own duration ends, so a campaign's traffic log was empty and the achieved rate was never
+  recorded.
+
 ## [0.2.1] - 2026-11-12
 
 `vxprobe` exports its slowest round trip, so a short measure window can be judged by it. Additive:

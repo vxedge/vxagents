@@ -3,6 +3,7 @@
 //! rate — the achieved figure goes into results metadata.
 
 use serde::Serialize;
+use std::future::Future;
 use std::net::SocketAddr;
 use std::time::{Duration, Instant};
 use tokio::net::UdpSocket;
@@ -35,6 +36,16 @@ pub struct LoadSummary {
 
 /// Blast paced UDP datagrams; returns achieved-rate summary.
 pub async fn run_load(cfg: LoadConfig) -> std::io::Result<LoadSummary> {
+    run_load_until(cfg, std::future::pending()).await
+}
+
+/// As [`run_load`], but stops sending as soon as `stop` completes and still returns the summary
+/// of what was sent until then. A run stopped this way has fewer packets than `pps * duration`.
+pub async fn run_load_until(
+    cfg: LoadConfig,
+    stop: impl Future<Output = ()>,
+) -> std::io::Result<LoadSummary> {
+    tokio::pin!(stop);
     // Unconnected socket + send_to on purpose: a connected UDP socket has
     // ICMP port-unreachable errors delivered on subsequent send() calls,
     // silently halving the achieved rate against a sink with no listener.
@@ -50,7 +61,11 @@ pub async fn run_load(cfg: LoadConfig) -> std::io::Result<LoadSummary> {
     let mut sent_bytes = 0u64;
     let mut send_errors = 0u64;
     for _ in 0..total {
-        ticker.tick().await;
+        tokio::select! {
+            biased;
+            () = &mut stop => break,
+            _ = ticker.tick() => {}
+        }
         match sock.send_to(&buf, cfg.target).await {
             Ok(n) => {
                 sent_packets += 1;
@@ -74,6 +89,24 @@ pub async fn run_load(cfg: LoadConfig) -> std::io::Result<LoadSummary> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn a_stopped_load_still_reports_what_it_sent() {
+        let sink = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
+        let cfg = LoadConfig {
+            target: sink.local_addr().unwrap(),
+            pps: 1000,
+            payload_bytes: 64,
+            duration: Duration::from_secs(30),
+        };
+        let started = Instant::now();
+        let summary = run_load_until(cfg, tokio::time::sleep(Duration::from_millis(200)))
+            .await
+            .unwrap();
+        assert!(started.elapsed() < Duration::from_secs(5));
+        assert!(summary.sent_packets > 0 && summary.sent_packets < 30_000);
+        assert_eq!(summary.target_pps, 1000);
+    }
 
     #[test]
     fn bandwidth_to_pps() {
