@@ -6,6 +6,11 @@ All notable changes to this repo are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-11-12
+
+`--version` names the build profile, so vxedged can record whether a result came from a debug or a
+release build. Additive: flags, series and output are otherwise unchanged.
+
 ### Added
 
 - `--version` ends in the build profile, `(debug)` or `(release)`, as in
