@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this software or its results, please cite it as below."
-title: "vxagents: measurement agents for an all-software SDV testbed"
+title: "vxagents: measurement agents for vxedge experiments"
 type: software
 authors:
   - family-names: "Djaafri"

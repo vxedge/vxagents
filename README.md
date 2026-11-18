@@ -6,7 +6,7 @@ Lightweight Rust measurement agents for vxedge experiments: RTT/jitter/loss prob
 [![CI](https://github.com/vxedge/vxagents/actions/workflows/ci.yml/badge.svg)](https://github.com/vxedge/vxagents/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/tag/vxedge/vxagents?label=release)](https://github.com/vxedge/vxagents/tags)
 
-vxedge is an open, all-software testbed for mapping 5G network slices onto zonal and central software-defined-vehicle (SDV) E/E architectures on a single machine. Every published number ships with the manifest and image digests that produced it.
+`vxagents` holds the measurement agents of vxedge, a virtual vehicle with environmental parity, for packaged, measured SDV experiments. Every result ships with the manifest and image digests that produced it.
 
 ## Crates
 
